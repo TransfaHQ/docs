@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Transfa",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -13,6 +13,22 @@
       {
         "tab": "API reference",
         "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "api-reference/introduction",
+              "api-reference/quickstart",
+              "api-reference/authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "api-reference/core-concepts",
+              "api-reference/pagination-filtering",
+              "api-reference/advanced-features"
+            ]
+          },
           {
             "group": "Endpoints",
             "openapi": "api-reference/openapi.json"

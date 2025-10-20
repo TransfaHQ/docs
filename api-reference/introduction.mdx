@@ -1,33 +1,91 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Reference'
+description: 'REST API for managing ledgers, accounts, and transactions'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Overview
 
-## Welcome
+The Transfa API is a REST API that provides complete control over your financial ledger infrastructure. Built on TigerBeetle, it enables high-performance double-entry bookkeeping with support for 100,000+ transactions per second.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+All API endpoints use JSON for requests and responses, follow RESTful conventions, and are versioned at `/v1/`.
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Key Features
 
-## Authentication
+<CardGroup cols={2}>
+  <Card
+    title="Double-Entry Bookkeeping"
+    icon="scale-balanced"
+  >
+    Record transactions with automatic debit and credit validation
+  </Card>
+  <Card
+    title="High Performance"
+    icon="bolt"
+    >
+    TigerBeetle-powered ledger handles 100,000+ TPS
+  </Card>
+  <Card
+    title="Idempotency Support"
+    icon="shield-check"
+  >
+    Safely retry requests without creating duplicates
+  </Card>
+  <Card
+    title="Flexible Metadata"
+    icon="tags"
+  >
+    Attach custom key-value pairs to all entities
+  </Card>
+</CardGroup>
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+## Base URL
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
 ```
+http://localhost:3000/v1
+```
+
+For production deployments, replace with your domain.
+
+## Getting Started
+
+<CardGroup cols={2}>
+  <Card
+    title="Authentication"
+    icon="key"
+    href="/api-reference/authentication"
+  >
+    Learn how to authenticate with API Keys or JWT tokens
+  </Card>
+  <Card
+    title="Core Concepts"
+    icon="book"
+    href="/api-reference/core-concepts"
+  >
+    Understand Ledgers, Accounts, Transactions, and Entries
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/api-reference/quickstart"
+  >
+    Get started with example requests and workflows
+  </Card>
+  <Card
+    title="Advanced Features"
+    icon="wand-magic-sparkles"
+    href="/api-reference/advanced-features"
+  >
+    Idempotency, metadata, and external IDs
+  </Card>
+</CardGroup>
+
+## API Capabilities
+
+The Transfa API provides endpoints for:
+
+- **Ledgers**: Create and manage multiple accounting ledgers
+- **Accounts**: Define accounts with specific currencies and balance types
+- **Transactions**: Record double-entry transactions with multiple entries
+- **Entries**: Query individual debit and credit entries
+- **Currencies**: Manage custom currency definitions
+- **Authentication**: Generate API keys and manage user access

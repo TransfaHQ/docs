@@ -1,0 +1,320 @@
+---
+title: 'Advanced Features'
+description: 'Leverage idempotency, metadata, and external IDs for robust integration'
+---
+
+## Overview
+
+Transfa provides advanced features that make building reliable financial applications easier:
+
+- **Idempotency** - Safely retry requests without creating duplicates
+- **Metadata** - Attach custom data to entities
+- **External IDs** - Link entities to your external systems
+
+## Idempotency
+
+Idempotency ensures that retrying the same request multiple times has the same effect as making it once. This is crucial for financial systems where network failures or timeouts could otherwise result in duplicate transactions.
+
+### How It Works
+
+Include an `idempotency-key` header with a unique identifier for each request:
+
+```bash
+curl -X POST http://localhost:3000/v1/ledger_transactions \
+  -H "idempotency-key: unique-key-12345" \
+  -H "Content-Type: application/json" \
+  -u key_id:key_secret \
+  -d '{
+    "ledgerId": "01933eb1-5fc4-7c85-9c7e-12a34b56c789",
+    "description": "Payment received",
+    "entries": [
+      {
+        "accountId": "01933eb2-a1c5-7d42-8f3a-9b87c6d5e4f3",
+        "amount": 100.00,
+        "direction": "debit"
+      },
+      {
+        "accountId": "01933eb2-b7d8-7f53-9a2e-7c8d9e0f1a2b",
+        "amount": 100.00,
+        "direction": "credit"
+      }
+    ]
+  }'
+```
+
+### Idempotency Behavior
+
+1. **First Request**: Creates the transaction and stores the response
+2. **Retry with Same Key**: Returns the original response without creating a duplicate
+3. **Different Request, Same Key**: Returns error (key already used for different request)
+
+### Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Network Failures" icon="wifi-slash">
+    Safely retry after connection timeouts
+  </Card>
+  <Card title="Distributed Systems" icon="server">
+    Prevent duplicates in microservices architecture
+  </Card>
+  <Card title="User Retries" icon="arrows-rotate">
+    Allow users to safely retry failed operations
+  </Card>
+  <Card title="Batch Processing" icon="list-check">
+    Resume interrupted batch operations
+  </Card>
+</CardGroup>
+
+### Generating Idempotency Keys
+
+<CodeGroup>
+```javascript JavaScript
+import { v4 as uuidv4 } from 'uuid';
+
+const idempotencyKey = uuidv4();
+// e.g., "550e8400-e29b-41d4-a716-446655440000"
+```
+
+```python Python
+import uuid
+
+idempotency_key = str(uuid.uuid4())
+# e.g., "550e8400-e29b-41d4-a716-446655440000"
+```
+
+```go Go
+import "github.com/google/uuid"
+
+idempotencyKey := uuid.New().String()
+// e.g., "550e8400-e29b-41d4-a716-446655440000"
+```
+</CodeGroup>
+
+### Best Practices
+
+<Warning>
+Always use a new idempotency key for each unique request. Reusing keys across different requests will result in errors.
+</Warning>
+
+<Card title="Key Format" icon="key">
+  Use UUIDs or other globally unique identifiers. Keys must be unique across your entire system.
+</Card>
+
+<Card title="Store Keys" icon="database">
+  Store idempotency keys in your application to enable retries after crashes or restarts.
+</Card>
+
+<Card title="Key Expiration" icon="clock">
+  Keys are stored for 24 hours. After expiration, the same key can be reused for a new request.
+</Card>
+
+### Error Responses
+
+#### Idempotency Key Conflict
+
+```json
+{
+  "statusCode": 409,
+  "message": "Idempotency key already used with different parameters",
+  "error": "Conflict"
+}
+```
+
+This occurs when you retry with the same key but different request body.
+
+## Metadata
+
+Metadata allows you to attach custom key-value pairs to entities. This is useful for storing additional context without modifying your database schema.
+
+### Supported Entities
+
+Metadata can be attached to:
+- Ledgers
+- Ledger Accounts
+- Ledger Transactions
+
+### Adding Metadata
+
+Include a `metadata` object when creating or updating entities:
+
+```bash
+curl -X POST http://localhost:3000/v1/ledger_accounts \
+  -H "Content-Type: application/json" \
+  -u key_id:key_secret \
+  -d '{
+    "ledgerId": "01933eb1-5fc4-7c85-9c7e-12a34b56c789",
+    "currency": "USD",
+    "normalBalance": "debit",
+    "name": "Operating Cash",
+    "metadata": {
+      "customerId": "cust_456",
+      "region": "us-east",
+      "accountType": "operating",
+      "businessUnit": "sales"
+    }
+  }'
+```
+
+### Metadata Constraints
+
+- **Keys**: String, max 100 characters
+- **Values**: String, max 500 characters
+- **Limit**: Up to 50 key-value pairs per entity
+- **Format**: Must be valid JSON object
+
+### Updating Metadata
+
+When updating an entity, the metadata object is merged:
+
+```bash
+# Initial metadata
+{
+  "customerId": "cust_456",
+  "region": "us-east"
+}
+
+# Update request
+PATCH /v1/ledger_accounts/01933eb2-a1c5-7d42-8f3a-9b87c6d5e4f3
+{
+  "metadata": {
+    "region": "us-west",
+    "status": "active"
+  }
+}
+
+# Resulting metadata
+{
+  "customerId": "cust_456",    # Preserved
+  "region": "us-west",         # Updated
+  "status": "active"           # Added
+}
+```
+
+### Removing Metadata Keys
+
+To remove a metadata key, set it to `null` in the update request:
+
+```bash
+# Current metadata
+{
+  "customerId": "cust_456",
+  "region": "us-east",
+  "status": "active"
+}
+
+# Update request - remove the "region" key
+PATCH /v1/ledger_accounts/01933eb2-a1c5-7d42-8f3a-9b87c6d5e4f3
+{
+  "metadata": {
+    "region": null
+  }
+}
+
+# Resulting metadata
+{
+  "customerId": "cust_456",    # Preserved
+  "status": "active"           # Preserved
+  # "region" has been removed
+}
+```
+
+<Note>
+Setting a metadata key to `null`, `undefined`, or an empty string will delete that key from the metadata.
+</Note>
+
+### Filtering by Metadata
+
+Query entities using metadata key-value pairs:
+
+```bash
+# Find accounts for a specific customer
+GET /v1/ledger_accounts?metadata[customerId]=cust_456
+
+# Find accounts by region
+GET /v1/ledger_accounts?metadata[region]=us-east
+
+# Multiple metadata filters (AND logic)
+GET /v1/ledger_accounts?metadata[customerId]=cust_456&metadata[status]=active
+```
+
+### Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Customer Linking" icon="link">
+    Link entities to customer records in your system
+  </Card>
+  <Card title="Categorization" icon="tags">
+    Add categories, types, or classifications
+  </Card>
+  <Card title="Integration Context" icon="plug">
+    Store external system references and context
+  </Card>
+  <Card title="Business Logic" icon="brain">
+    Store flags and settings for application logic
+  </Card>
+</CardGroup>
+
+## External IDs
+
+External IDs provide a way to reference entities using identifiers from your own systems. This simplifies integration by allowing lookups without storing Transfa IDs.
+
+### Supported Entities
+
+External IDs can be set on:
+- Ledger Accounts
+- Ledger Transactions
+
+### Setting External IDs
+
+Include an `externalId` when creating entities:
+
+```bash
+curl -X POST http://localhost:3000/v1/ledger_accounts \
+  -H "Content-Type: application/json" \
+  -u key_id:key_secret \
+  -d '{
+    "ledgerId": "01933eb1-5fc4-7c85-9c7e-12a34b56c789",
+    "currency": "USD",
+    "normalBalance": "debit",
+    "name": "Customer Bank Account",
+    "externalId": "bank_account_789"
+  }'
+```
+
+### Retrieving by External ID
+
+Use external IDs directly in place of internal IDs. The API automatically detects whether you're passing a UUID or an external ID:
+
+```bash
+# Get account by external ID
+GET /v1/ledger_accounts/bank_account_789
+
+# Get transaction by external ID
+GET /v1/ledger_transactions/payment_invoice_123
+```
+
+<Info>
+The API automatically detects the ID type: if it's a valid UUID, it searches both internal IDs and external IDs. If it's not a UUID, it searches only external IDs. No prefix needed!
+</Info>
+
+### External ID Constraints
+
+- **Format**: String, max 255 characters
+- **Uniqueness**: Must be unique within the entity type (accounts or transactions)
+- **Immutability**: Cannot be changed after creation
+- **Optional**: Not required, but highly recommended for integration
+
+### Filtering by External ID
+
+Use external IDs in filters:
+
+```bash
+# Find entries by transaction external ID
+GET /v1/ledger_entries?transactionExternalId=payment_123
+
+# Find entries by account external ID
+GET /v1/ledger_entries?accountExternalId=bank_acc_456
+```
+
+
+

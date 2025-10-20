@@ -1,0 +1,219 @@
+---
+title: 'Pagination & Filtering'
+description: 'Navigate large datasets efficiently with cursor-based pagination and powerful filtering'
+---
+
+## Overview
+
+The Transfa API provides comprehensive pagination and filtering capabilities to help you efficiently query and retrieve data. Most list endpoints support cursor-based pagination for consistent results, along with powerful filtering options.
+
+## Cursor-Based Pagination
+
+Cursor-based pagination provides stable results even when data is being modified. It's used by most list endpoints in the API.
+
+### How It Works
+
+Instead of page numbers, cursor pagination uses UUID cursors that point to specific positions in the dataset:
+
+```bash
+# First request - get initial page
+GET /v1/ledger_accounts?limit=10
+
+# Subsequent request - use nextCursor from previous response
+GET /v1/ledger_accounts?limit=10&afterCursor=01933eb2-a1c5-7d42-8f3a-9b87c6d5e4f3
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | number | Number of items per page (default: 20, max: 100) |
+| `afterCursor` | string (UUID) | Get items after this cursor - use `nextCursor` from previous response |
+| `beforeCursor` | string (UUID) | Get items before this cursor - use `prevCursor` for backwards pagination |
+
+### Response Format
+
+```json
+{
+  "data": [
+    {
+      "id": "01933eb2-a1c5-7d42-8f3a-9b87c6d5e4f3",
+      "name": "Cash Account",
+      // ... other fields
+    },
+    // ... more items
+  ],
+  "nextCursor": "01933eb2-b7d8-7f53-9a2e-7c8d9e0f1a2b",
+  "prevCursor": "01933eb2-a1c5-7d42-8f3a-9b87c6d5e4f3",
+  "hasNext": true,
+  "hasPrev": true
+}
+```
+
+### Navigation Example
+
+<CodeGroup>
+```bash Forward Pagination
+# Page 1
+curl "http://localhost:3000/v1/ledger_accounts?limit=10"
+
+# Page 2 - use nextCursor from page 1
+curl "http://localhost:3000/v1/ledger_accounts?limit=10&afterCursor=01933eb2-a1c5-7d42-8f3a-9b87c6d5e4f3"
+
+# Page 3 - use nextCursor from page 2
+curl "http://localhost:3000/v1/ledger_accounts?limit=10&afterCursor=01933eb2-b7d8-7f53-9a2e-7c8d9e0f1a2b"
+```
+
+```bash Backward Pagination
+# Navigate backwards from current position
+curl "http://localhost:3000/v1/ledger_accounts?limit=10&beforeCursor=01933eb2-b7d8-7f53-9a2e-7c8d9e0f1a2b"
+```
+</CodeGroup>
+
+### Best Practices
+
+<Card title="Check hasNext Flag" icon="check">
+  Always check `hasNext` before making additional requests to avoid empty responses
+</Card>
+
+<Card title="Use Cursors As-Is" icon="lock">
+  Cursors are UUIDs - use them as-is from the API response without modification
+</Card>
+
+<Card title="Set Appropriate Limits" icon="gauge">
+  Use smaller limits (20-50) for user interfaces, larger (100) for batch processing
+</Card>
+
+## Offset-Based Pagination
+
+The Currencies endpoint uses traditional offset-based pagination:
+
+```bash
+# Page 1 (first 20 items)
+GET /v1/currencies?page=1&limit=20
+
+# Page 2 (items 21-40)
+GET /v1/currencies?page=2&limit=20
+```
+
+### Response Format
+
+```json
+{
+  "data": [
+    {
+      "code": "USD",
+      "name": "United States Dollar"
+    }
+  ],
+  "meta": {
+    "total": 150,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 8
+  }
+}
+```
+
+## Filtering
+
+Different endpoints support various filtering options to narrow down results.
+
+### Ledger Accounts Filtering
+
+Filter accounts by multiple criteria:
+
+```bash
+# Filter by ledger
+GET /v1/ledger_accounts?ledgerId=led_123
+
+# Filter by currency
+GET /v1/ledger_accounts?currency=USD
+
+# Filter by normal balance type
+GET /v1/ledger_accounts?normalBalance=debit
+
+# Combine multiple filters
+GET /v1/ledger_accounts?ledgerId=led_123&currency=USD&normalBalance=debit
+```
+
+### Ledger Entries Filtering
+
+Entries support comprehensive filtering:
+
+```bash
+# Filter by ledger
+GET /v1/ledger_entries?ledgerId=led_123
+
+# Filter by transaction (internal ID)
+GET /v1/ledger_entries?transactionId=txn_456
+
+# Filter by transaction (external ID)
+GET /v1/ledger_entries?transactionExternalId=payment_789
+
+# Filter by account (internal ID)
+GET /v1/ledger_entries?accountId=acc_123
+
+# Filter by account (external ID)
+GET /v1/ledger_entries?accountExternalId=bank_acc_456
+
+# Filter by direction
+GET /v1/ledger_entries?direction=debit
+
+# Combine filters for powerful queries
+GET /v1/ledger_entries?ledgerId=led_123&accountId=acc_456&direction=credit
+```
+
+## Search Functionality
+
+Text search is available on select endpoints:
+
+### Account Search
+
+Search across account names, descriptions, and external IDs:
+
+```bash
+GET /v1/ledger_accounts?search=cash
+```
+
+Matches accounts where:
+- Name contains "cash"
+- Description contains "cash"
+- External ID contains "cash"
+
+### Transaction Search
+
+Search transaction descriptions:
+
+```bash
+GET /v1/ledger_transactions?search=payment
+```
+
+### Currency Search
+
+Search by currency code or name:
+
+```bash
+GET /v1/currencies?search=dollar
+```
+
+## Metadata Filtering
+
+Filter by custom metadata key-value pairs using Stripe-style syntax:
+
+```bash
+# Single metadata filter
+GET /v1/ledger_accounts?metadata[customerId]=cust_123
+
+# Multiple metadata filters (AND logic)
+GET /v1/ledger_accounts?metadata[customerId]=cust_123&metadata[region]=us-east
+
+# Combine with other filters
+GET /v1/ledger_accounts?ledgerId=led_456&currency=USD&metadata[type]=operating
+```
+
+<Note>
+Metadata filtering uses exact match. Partial matching and wildcards are not supported.
+</Note>
+
+

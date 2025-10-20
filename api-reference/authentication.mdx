@@ -1,0 +1,202 @@
+---
+title: 'Authentication'
+description: 'Learn how to authenticate API requests with API Keys, JWT tokens, and Admin access'
+---
+
+## Overview
+
+The Transfa API supports three authentication methods depending on your use case:
+
+1. **API Keys** - For service-to-service authentication
+2. **JWT Tokens** - For user-based authentication
+3. **Admin Key** - For administrative operations
+
+## API Key Authentication
+
+API Keys are ideal for server-to-server communication and automated systems.
+
+### Creating an API Key
+
+API Keys can only be created by administrators:
+
+```bash
+curl -X POST http://localhost:3000/v1/auth/keys \
+  -H "x-admin-key: your-admin-secret" \
+  -H "Content-Type: application/json"
+```
+
+Response:
+```json
+{
+  "id": "01933eb5-a1b2-7c83-9d4e-5f6a7b8c9d0e",
+  "secret": "sSj929ahalLKAIoukI202amah456def789abc012",
+  "created_at": "2025-10-20T10:00:00Z"
+}
+```
+
+<Warning>
+  Save the API secret immediately. It's only shown once and cannot be retrieved later.
+</Warning>
+
+### Using API Keys
+
+Pass API Keys using HTTP Basic Authentication:
+
+```bash
+curl http://localhost:3000/v1/ledgers \
+  -u 01933eb5-a1b2-7c83-9d4e-5f6a7b8c9d0e:sSj929ahalLKAIoukI202amah456def789abc012
+```
+
+Or using the Authorization header:
+
+```bash
+curl http://localhost:3000/v1/ledgers \
+  -H "Authorization: Basic $(echo -n '01933eb5-a1b2-7c83-9d4e-5f6a7b8c9d0e:sSj929ahalLKAIoukI202amah456def789abc012' | base64)"
+```
+
+### Deleting API Keys
+
+```bash
+curl -X DELETE http://localhost:3000/v1/auth/keys \
+  -H "x-admin-key: your-admin-secret" \
+  -H "Content-Type: application/json" \
+  -d '{"keyId": "01933eb5-a1b2-7c83-9d4e-5f6a7b8c9d0e"}'
+```
+
+## JWT Token Authentication
+
+JWT tokens are used for user-based authentication, typically in web applications.
+
+### Obtaining a JWT Token
+
+Users can log in to receive a JWT token:
+
+```bash
+curl -X POST http://localhost:3000/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "secure_password"
+  }'
+```
+
+The JWT token is returned in an HTTP-only cookie named `access_token` and is valid for 24 hours (configurable).
+
+### Using JWT Tokens
+
+Once logged in, the JWT cookie is automatically sent with subsequent requests:
+
+```bash
+curl http://localhost:3000/v1/ledgers \
+  --cookie "access_token=eyJhbGc..."
+```
+
+### Token Expiration
+
+JWT tokens expire after the configured duration (default: 24 hours). When a token expires, users must log in again to obtain a new token.
+
+## Admin Authentication
+
+Administrative operations require the admin key for enhanced security.
+
+### Setting Up Admin Key
+
+Configure the admin key via environment variable:
+
+```bash
+ADMIN_SECRET=your-secure-admin-key
+```
+
+### Using Admin Key
+
+Pass the admin key in the `x-admin-key` header:
+
+```bash
+curl -X POST http://localhost:3000/v1/auth/users \
+  -H "x-admin-key: your-secure-admin-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newuser@example.com",
+    "password": "secure_password",
+    "name": "New User"
+  }'
+```
+
+### Admin-Only Endpoints
+
+The following endpoints require admin authentication:
+
+- `POST /v1/auth/users` - Create new users
+- `POST /v1/auth/keys` - Create API keys
+- `DELETE /v1/auth/keys` - Delete API keys
+
+## Authentication Priority
+
+When both API Key and JWT token are provided, the API attempts authentication in this order:
+
+1. API Key (HTTP Basic Auth)
+2. JWT Token (Cookie)
+
+If API Key authentication succeeds, JWT authentication is not attempted.
+
+## Environment Configuration
+
+Configure authentication behavior with these environment variables:
+
+```bash
+# JWT Configuration
+JWT_SECRET=your-jwt-secret-key
+JWT_EXPIRES_IN=24h
+
+# Admin Configuration
+ADMIN_SECRET=your-admin-secret
+
+# Password Hashing
+AUTH_SALT_ROUNDS=10
+```
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Rotate Keys Regularly" icon="rotate">
+    Periodically rotate API keys and secrets
+  </Card>
+  <Card title="Use HTTPS" icon="lock">
+    Always use HTTPS in production to encrypt credentials
+  </Card>
+  <Card title="Limit Key Scope" icon="shield">
+    Create separate keys for different services
+  </Card>
+  <Card title="Monitor Access" icon="eye">
+    Log and monitor authentication attempts
+  </Card>
+</CardGroup>
+
+## Error Responses
+
+### 401 Unauthorized
+
+```json
+{
+  "statusCode": 401,
+  "message": "Unauthorized"
+}
+```
+
+Returned when:
+- No authentication credentials provided
+- Invalid API key or JWT token
+- Expired JWT token
+
+### 403 Forbidden
+
+```json
+{
+  "statusCode": 403,
+  "message": "Forbidden"
+}
+```
+
+Returned when:
+- Valid credentials but insufficient permissions
+- Non-admin user attempting admin-only operations
