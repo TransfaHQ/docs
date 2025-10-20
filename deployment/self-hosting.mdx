@@ -1,0 +1,381 @@
+---
+title: "Self-Hosting with Docker"
+description: "Deploy Transfa on your own infrastructure using Docker Compose"
+---
+
+## Overview
+
+Self-host Transfa on your own infrastructure using Docker Compose. This guide walks you through deploying the complete stack including PostgreSQL, backend API, and frontend application.
+
+## Quick Start
+
+Get Transfa running in under 5 minutes:
+
+<Steps>
+<Step title="Get the docker-compose.yml file">
+
+Download the production Docker Compose configuration:
+
+```bash
+curl -o docker-compose.yml https://raw.githubusercontent.com/transfahq/core/main/docker-compose.yml
+```
+
+Or clone the repository:
+
+```bash
+git clone https://github.com/transfahq/core.git
+cd core
+```
+
+</Step>
+
+<Step title="Configure environment variables">
+
+Create environment files for backend and frontend:
+
+**Backend Configuration** (`.env.backend`):
+
+```bash
+# Database Configuration
+DB_HOST=postgres
+DB_PORT=5432
+DB_USERNAME=transfa
+DB_PASSWORD=transfa2025
+DB_NAME=transfa
+CORE_POSTGRES_SCHEMA=core
+DB_MIGRATIONS_TABLE=core_migrations
+DB_ENABLE_LOGGING=false
+
+# TigerBeetle Configuration
+# Update with your TigerBeetle deployment address
+TIGER_BEETLE_CLUSTER_ID=0
+TIGER_BEETLE_REPLICAS_ADDRESSES=tigerbeetle.example.com:3000
+
+# Authentication (CHANGE THESE IN PRODUCTION!)
+ADMIN_SECRET=your_secure_admin_secret_here
+JWT_SECRET=your_secure_jwt_secret_key_here
+JWT_EXPIRES_IN=24h
+
+# CORS Configuration
+CORS_ORIGINS=http://localhost:8080
+```
+
+**Frontend Configuration** (`.env.frontend`):
+
+```bash
+# Backend API URL
+VITE_API_URL=http://localhost:3000
+```
+
+<Warning>
+**Security**: Always change `ADMIN_SECRET` and `JWT_SECRET` to secure, randomly generated values in production. Use a password manager or `openssl rand -base64 32` to generate secure secrets.
+</Warning>
+
+</Step>
+
+<Step title="Start the services">
+
+Launch all services with Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+This will:
+- Pull the latest images from GitHub Container Registry
+- Start PostgreSQL database
+- Start the backend API
+- Start the frontend application
+- Run database migrations automatically
+
+</Step>
+
+<Step title="Verify deployment">
+
+Check that all services are running:
+
+```bash
+docker-compose ps
+```
+
+You should see three services running:
+- `transfa-postgres`
+- `transfa-api`
+- `transfa-web`
+
+View logs to confirm successful startup:
+
+```bash
+docker-compose logs -f
+```
+
+</Step>
+</Steps>
+
+## Accessing Your Application
+
+Once deployed, access Transfa at these URLs:
+
+<CardGroup cols={2}>
+  <Card title="Frontend Dashboard" icon="browser" href="http://localhost:8080">
+    Main application interface at `http://localhost:8080`
+  </Card>
+  <Card title="Backend API" icon="code" href="http://localhost:3000">
+    API endpoint at `http://localhost:3000`
+  </Card>
+  <Card title="API Health Check" icon="heart-pulse" href="http://localhost:3000/health">
+    Health endpoint at `http://localhost:3000/health`
+  </Card>
+  <Card title="Database" icon="database">
+    PostgreSQL at `localhost:5432`
+  </Card>
+</CardGroup>
+
+## Service Architecture
+
+The Docker Compose setup includes three main services:
+
+### PostgreSQL Database
+- **Image**: `postgres:17-alpine`
+- **Port**: 5432
+- **Purpose**: Stores application data, user accounts, and metadata
+- **Volume**: `postgres_data` for data persistence
+- **Health Check**: Automatic with retry logic
+
+### Backend API
+- **Image**: `ghcr.io/transfahq/transfa-api:latest`
+- **Port**: 3000
+- **Purpose**: REST API server built with NestJS
+- **Features**: Authentication, account management, transaction processing
+- **Health Check**: `/health` endpoint
+
+### Frontend Application
+- **Image**: `ghcr.io/transfahq/transfa-web:latest`
+- **Port**: 8080
+- **Purpose**: Web dashboard built with React
+- **Features**: Account management, transaction monitoring, reporting
+
+## TigerBeetle Deployment
+
+<Warning>
+**Important**: TigerBeetle is **not** included in the Docker Compose file. You must deploy TigerBeetle separately for production use.
+</Warning>
+
+### Network Security
+
+<Info>
+**Best Practice**: Deploy TigerBeetle and Transfa in the same VPC (Virtual Private Cloud) or private network. TigerBeetle should **not** be accessible from the public internet.
+
+- Only the Transfa backend needs to communicate with TigerBeetle
+- Use private IP addresses or internal DNS for TigerBeetle connections
+- Configure security groups/firewall rules to block external access to TigerBeetle
+
+**Example VPC Setup**:
+- **Public subnet**: Frontend application, API gateway, load balancer
+- **Private subnet**: Transfa backend, TigerBeetle cluster, PostgreSQL
+- **Security groups**: Allow backend → TigerBeetle, block all external access to TigerBeetle
+</Info>
+
+### Production deployment
+
+For production, deploy TigerBeetle separately using:
+
+1. **Direct binary installation** (recommended)
+2. **Docker on dedicated infrastructure**
+3. **Multi-node cluster for high availability**
+
+See the [TigerBeetle Documentation](https://docs.tigerbeetle.com/) for detailed deployment instructions.
+
+<Card title="TigerBeetle Deployment Guide" icon="book" href="https://docs.tigerbeetle.com/operating/">
+  Comprehensive guide for deploying TigerBeetle in production
+</Card>
+
+After deploying TigerBeetle, update your `.env.backend` file with the **private** address(es):
+
+```bash
+# Single node (use private IP or internal DNS)
+TIGER_BEETLE_REPLICAS_ADDRESSES=10.0.1.10:3000
+# or
+TIGER_BEETLE_REPLICAS_ADDRESSES=tigerbeetle.internal:3000
+
+# Multi-node cluster (recommended for production)
+# Use private IPs within your VPC
+TIGER_BEETLE_REPLICAS_ADDRESSES=10.0.1.10:3000,10.0.1.11:3000,10.0.1.12:3000
+```
+
+<Tip>
+Always use internal/private network addresses for TigerBeetle. Never expose TigerBeetle directly to the public internet.
+</Tip>
+
+## Configuration
+
+### Custom Ports
+
+To use different ports, modify the `ports` section in `docker-compose.yml`:
+
+```yaml
+services:
+  backend:
+    ports:
+      - "3001:3000"  # Use port 3001 instead of 3000
+
+  frontend:
+    ports:
+      - "8081:8080"  # Use port 8081 instead of 8080
+```
+
+Don't forget to update your `.env.frontend` file:
+
+```bash
+VITE_API_URL=http://localhost:3001
+```
+
+### Persistent Data
+
+Data is stored in Docker volumes:
+
+- `postgres_data`: Database files
+- Named volumes are managed by Docker
+
+To back up volumes:
+
+```bash
+docker run --rm -v transfa_postgres_data:/data -v $(pwd):/backup \
+  alpine tar czf /backup/postgres-backup.tar.gz /data
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Services won't start">
+    Check logs for specific errors:
+
+    ```bash
+    docker-compose logs
+    ```
+
+    Common issues:
+    - Ports already in use (change ports in docker-compose.yml)
+    - Missing environment files (create .env.backend and .env.frontend)
+    - Insufficient memory (ensure at least 2GB available)
+  </Accordion>
+
+  <Accordion title="Cannot connect to backend API">
+    Verify:
+
+    1. Backend is running: `docker-compose ps`
+    2. Check backend logs: `docker-compose logs backend`
+    3. Test health endpoint: `curl http://localhost:3000/health`
+    4. Verify CORS_ORIGINS includes your frontend URL
+  </Accordion>
+
+  <Accordion title="Database connection errors">
+    1. Ensure PostgreSQL is healthy: `docker-compose ps postgres`
+    2. Check database logs: `docker-compose logs postgres`
+    3. Verify credentials in .env.backend match docker-compose.yml
+    4. Wait for database initialization (may take 30-60 seconds on first start)
+  </Accordion>
+
+  <Accordion title="TigerBeetle connection errors">
+    1. Verify TigerBeetle is running and accessible
+    2. Check TIGER_BEETLE_REPLICAS_ADDRESSES in .env.backend
+    3. Ensure network connectivity between backend and TigerBeetle
+    4. Test connection: `nc -zv tigerbeetle-host 3000`
+  </Accordion>
+
+  <Accordion title="Frontend shows blank page">
+    1. Check frontend logs: `docker-compose logs frontend`
+    2. Verify VITE_API_URL in .env.frontend is correct
+    3. Check browser console for errors
+    4. Ensure backend is accessible from your browser
+  </Accordion>
+
+ 
+</AccordionGroup>
+
+
+
+## Production Considerations
+
+<Warning>
+Before deploying to production, ensure you address these critical items:
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Security" icon="shield-halved">
+    - Change all default secrets
+    - Use environment-specific credentials
+    - Enable HTTPS with reverse proxy
+    - Deploy TigerBeetle in private VPC/subnet
+    - Restrict database and TigerBeetle access
+    - Regular security updates
+  </Card>
+
+  <Card title="TigerBeetle HA" icon="server">
+    - Deploy multi-node cluster
+    - Configure automatic failover
+    - Set up monitoring and alerts
+    - Follow TigerBeetle best practices
+  </Card>
+
+  <Card title="Backup Strategy" icon="floppy-disk">
+    - Automated database backups
+    - TigerBeetle data replication
+    - Test restore procedures
+    - Off-site backup storage
+  </Card>
+
+  <Card title="Monitoring" icon="chart-line">
+    - Container health checks
+    - Application performance metrics
+    - Database monitoring
+    - Log aggregation
+  </Card>
+</CardGroup>
+
+### Using a Reverse Proxy
+
+For production, use a reverse proxy (Nginx, Traefik, Caddy) to:
+
+- Enable HTTPS/SSL
+- Handle domain routing
+- Load balancing
+- Rate limiting
+
+Example Nginx configuration:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name transfa.yourdomain.com;
+
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /api {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Documentation" icon="code" href="/api-reference/introduction">
+    Explore the API reference and start building integrations
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- [TigerBeetle Documentation](https://docs.tigerbeetle.com/)
+- [Transfa GitHub Repository](https://github.com/transfahq/core)
+- [Community Support](https://github.com/transfahq/core/discussions)

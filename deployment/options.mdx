@@ -1,0 +1,326 @@
+---
+title: "Deployment Options"
+description: "Choose the right deployment model for your financial infrastructure"
+---
+
+## Overview
+
+Transfa offers flexible deployment options to match your infrastructure requirements, compliance needs, and operational preferences. Choose between self-hosted deployment for complete control or managed cloud services for operational simplicity.
+
+## Deployment Models
+
+<CardGroup cols={2}>
+  <Card
+    title="Self-Hosted"
+    icon="server"
+    href="/deployment/self-hosting"
+  >
+    Deploy on your own infrastructure with complete control over data and operations.
+  </Card>
+  <Card
+    title="Managed Cloud"
+    icon="cloud"
+    color="#16A34A"
+  >
+    Fully managed infrastructure with enterprise support (coming soon).
+  </Card>
+</CardGroup>
+
+## Self-Hosted Deployment
+
+Run Transfa on your own infrastructure with complete control and transparency.
+
+### Benefits
+
+<AccordionGroup>
+  <Accordion title="Complete Data Control" icon="lock">
+    - Your data stays on your infrastructure
+    - Full audit trail of all operations
+    - No third-party data access
+    - Compliance-friendly for regulated industries
+  </Accordion>
+
+  <Accordion title="Infrastructure Independence" icon="unlock">
+    - No vendor lock-in
+    - Run on any cloud provider or on-premises
+    - Survive provider pricing changes
+    - Deploy across multiple regions
+  </Accordion>
+
+  <Accordion title="Cost Predictability" icon="dollar-sign">
+    - Pay only for your infrastructure
+    - No per-transaction fees
+    - No per-user licensing
+    - Scale without cost surprises
+  </Accordion>
+
+  <Accordion title="Customization Freedom" icon="wrench">
+    - Modify source code as needed
+    - Integrate with existing systems
+    - Custom authentication providers
+    - Tailor to specific compliance requirements
+  </Accordion>
+</AccordionGroup>
+
+### Deployment Methods
+
+<Tabs>
+  <Tab title="Docker Compose">
+    **Best for**: Quick deployment, small to medium deployments
+
+    - All services in one configuration
+    - Simple updates with docker-compose pull
+    - Perfect for single-server deployments
+    - Production-ready with proper configuration
+
+    <Card title="Self-Hosting Guide" icon="rocket" href="/deployment/self-hosting">
+      Complete guide to deploying with Docker Compose
+    </Card>
+  </Tab>
+
+  <Tab title="Kubernetes">
+    **Best for**: Large-scale deployments, enterprise environments
+
+    - Automatic scaling and failover
+    - Rolling updates with zero downtime
+    - Advanced networking and security
+    - Multi-region deployments
+
+    <Info>
+      Kubernetes manifests and Helm charts coming soon. Join our [GitHub discussions](https://github.com/transfahq/core/discussions) to share your requirements.
+    </Info>
+  </Tab>
+
+  <Tab title="Cloud Platforms">
+    **Best for**: Platform-specific features, managed services
+
+    Deploy to popular cloud platforms:
+
+    - **AWS**: ECS, EKS, or EC2
+    - **Google Cloud**: GKE or Cloud Run
+    - **Azure**: AKS or Container Instances
+    - **DigitalOcean**: App Platform or Droplets
+    - **Railway**: One-click deployment
+    - **Render**: Container-based hosting
+
+    <Tip>
+      Most platforms can deploy directly from the `docker-compose.yml` file or Docker images at `ghcr.io/transfahq/transfa-api` and `ghcr.io/transfahq/transfa-web`.
+    </Tip>
+  </Tab>
+
+  <Tab title="Bare Metal">
+    **Best for**: Maximum performance, specific compliance needs
+
+    - Direct hardware access
+    - Maximum I/O performance for TigerBeetle
+    - Complete infrastructure control
+    - No virtualization overhead
+
+    Deploy services directly:
+    - PostgreSQL: Native installation
+    - TigerBeetle: Binary deployment
+    - Backend/Frontend: Node.js runtime or systemd services
+  </Tab>
+</Tabs>
+
+### Requirements
+
+<Card title="Minimum Requirements" icon="server">
+  **Infrastructure**:
+  - 2 CPU cores
+  - 4GB RAM
+  - 20GB storage (plus database growth)
+  - Docker 20.10+ and Docker Compose v2+
+
+  **Skills**:
+  - Basic Docker knowledge
+  - Linux command line
+  - Understanding of web application deployment
+</Card>
+
+### Support Model
+
+Self-hosted deployments include:
+
+<CardGroup cols={2}>
+  <Card title="Community Support" icon="users">
+    - GitHub discussions and issues
+    - Community chat and forums
+    - Public documentation
+    - Open-source contributions
+  </Card>
+
+  <Card title="Documentation" icon="book">
+    - Comprehensive deployment guides
+    - API reference
+    - Troubleshooting resources
+    - Best practices
+  </Card>
+</CardGroup>
+
+## Managed Cloud (Coming Soon)
+
+<Info>
+  Managed cloud offering is in development. [Contact us](https://cal.com/nelsonk-transfa/20min) to join the waitlist or discuss custom enterprise deployments.
+</Info>
+
+### Planned Features
+
+Fully managed Transfa infrastructure with enterprise support:
+
+<CardGroup cols={2}>
+  <Card title="Zero Operations" icon="wand-magic-sparkles">
+    - Automatic updates and patches
+    - Managed database and TigerBeetle clusters
+    - 24/7 infrastructure monitoring
+    - Automated backups and disaster recovery
+  </Card>
+
+  <Card title="High Availability" icon="globe">
+    - Multi-region deployment
+    - Automatic failover
+    - 99.99% uptime SLA
+    - Geographic data residency options
+  </Card>
+
+  <Card title="Enterprise Security" icon="shield-halved">
+    - SOC 2 Type II compliance
+    - Encryption at rest and in transit
+    - Regular security audits
+    - Penetration testing
+  </Card>
+
+  <Card title="Dedicated Support" icon="headset">
+    - Priority email and chat support
+    - Dedicated account manager
+    - Custom SLAs
+    - Implementation assistance
+  </Card>
+</CardGroup>
+
+### Pricing Model
+
+Planned pricing tiers (subject to change):
+
+- **Starter**: For small teams and startups
+- **Professional**: For growing businesses
+- **Enterprise**: Custom deployments with dedicated infrastructure
+
+[Contact us](https://cal.com/nelsonk-transfa/20min) to discuss your requirements and pricing.
+
+## Comparison Matrix
+
+Choose the deployment option that best fits your needs:
+
+| Feature | Self-Hosted | Managed Cloud |
+|---------|-------------|---------------|
+| **Setup Time** | Hours | Minutes |
+| **Operational Control** | Complete | Managed |
+| **Data Location** | Your infrastructure | Your choice of regions |
+| **Maintenance** | Self-managed | Fully managed |
+| **Cost Model** | Infrastructure only | Subscription-based |
+| **Customization** | Unlimited | Configuration options |
+| **Support** | Community | Dedicated enterprise |
+| **Updates** | Manual | Automatic |
+| **Scaling** | Manual | Automatic |
+| **Compliance** | Your responsibility | Assisted compliance |
+
+## Hybrid Deployments
+
+Combine deployment models for specific needs:
+
+<CardGroup cols={2}>
+  <Card title="Multi-Cloud" icon="cloud">
+    - Deploy across multiple cloud providers
+    - Regional failover capabilities
+    - Avoid provider lock-in
+    - Optimize costs per region
+  </Card>
+
+  <Card title="Hybrid Cloud" icon="server">
+    - Keep sensitive data on-premises
+    - Use cloud for frontend/edge locations
+    - Compliance-driven architecture
+    - Best of both worlds
+  </Card>
+</CardGroup>
+
+## Decision Guide
+
+<Steps>
+  <Step title="Assess your requirements">
+    Consider:
+    - **Compliance**: Regulatory requirements for data location
+    - **Team Skills**: DevOps and infrastructure expertise
+    - **Scale**: Expected transaction volumes
+    - **Budget**: Infrastructure vs. managed service costs
+    - **Control**: Need for customization vs. convenience
+  </Step>
+
+  <Step title="Evaluate deployment models">
+    - **Self-hosted** if you need maximum control and customization
+    - **Managed cloud** if you want zero operations overhead
+    - **Hybrid** if you have specific compliance or architectural needs
+  </Step>
+
+  <Step title="Start with self-hosted">
+    Begin with a self-hosted deployment to:
+    - Understand the system architecture
+    - Test with your workload
+    - Evaluate operational requirements
+    - Make an informed decision about managed services
+  </Step>
+</Steps>
+
+<Tip>
+Most organizations start with self-hosted deployment to understand operational requirements, then migrate to managed cloud as they scale.
+</Tip>
+
+## Getting Started
+
+Ready to deploy? Choose your path:
+
+<CardGroup cols={2}>
+  <Card
+    title="Deploy with Docker"
+    icon="rocket"
+    href="/deployment/self-hosting"
+  >
+    Get started with self-hosted deployment using Docker Compose
+  </Card>
+
+  <Card
+    title="Contact Sales"
+    icon="comments"
+    href="https://cal.com/nelsonk-transfa/20min"
+  >
+    Discuss managed cloud or enterprise deployments
+  </Card>
+
+  <Card
+    title="API Documentation"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Explore the API for custom integrations
+  </Card>
+
+  <Card
+    title="Community"
+    icon="users"
+    href="https://github.com/transfahq/core/discussions"
+  >
+    Join discussions and get community support
+  </Card>
+</CardGroup>
+
+## Migration Support
+
+Already running financial infrastructure? We can help:
+
+- Migration from legacy ledger systems
+- Integration with existing databases
+- Data import and reconciliation
+- Custom migration tooling
+
+[Contact us](https://cal.com/nelsonk-transfa/20min) to discuss your migration needs.
