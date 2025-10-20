@@ -148,6 +148,11 @@ The Docker Compose setup includes three main services:
 - **Purpose**: REST API server built with NestJS
 - **Features**: Authentication, account management, transaction processing
 - **Health Check**: `/health` endpoint
+- **Security**: Requires `seccomp=unconfined` for io_uring support (TigerBeetle client requirement)
+
+<Note>
+**Technical Note**: The backend container includes `security_opt: seccomp=unconfined` in the Docker Compose configuration. This is required because the TigerBeetle client library uses io_uring on Linux for high-performance I/O operations. Without this setting, the backend cannot communicate with TigerBeetle. This is already configured in the provided `docker-compose.yml` file.
+</Note>
 
 ### Frontend Application
 - **Image**: `ghcr.io/transfahq/transfa-web:latest`
@@ -280,7 +285,11 @@ docker run --rm -v transfa_postgres_data:/data -v $(pwd):/backup \
     1. Verify TigerBeetle is running and accessible
     2. Check TIGER_BEETLE_REPLICAS_ADDRESSES in .env.backend
     3. Ensure network connectivity between backend and TigerBeetle
-    4. Test connection: `nc -zv tigerbeetle-host 3000`
+    4. Verify backend has `security_opt: seccomp=unconfined` (required for io_uring)
+    5. Check backend logs for TigerBeetle client errors: `docker-compose logs backend | grep -i tigerbeetle`
+    6. Test connection: `nc -zv tigerbeetle-host 3000`
+
+    **Note**: On Linux, the backend requires `seccomp=unconfined` to use io_uring for TigerBeetle communication. This is pre-configured in the docker-compose.yml file.
   </Accordion>
 
   <Accordion title="Frontend shows blank page">
